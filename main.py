@@ -16,7 +16,7 @@ import pandas as pd
 INPUT_DIR = Path(r"C:\Users\edwar\OneDrive\Imágenes\Documents\Documentos\Datos")
 OUTPUT_DIR = INPUT_DIR / "output_turismo"
 
-# Nombres esperados de archivos:
+# Nombres de archivos:
 # - Extranjeros_No_Residentes_20260311.csv
 # - Tasa de cambio del peso colombiano.csv
 # - Registro_Nacional_de_Turismo_-_RNT_20260311.csv
@@ -54,7 +54,7 @@ DEPT_EQUIV = {
 
 
 def normalize_text(value: object) -> Optional[str]:
-    """Normaliza texto: mayúsculas, sin tildes, sin caracteres raros."""
+    """Normaliza texto: mayúsculas"""
     if pd.isna(value):
         return None
 

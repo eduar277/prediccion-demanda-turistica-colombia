@@ -1,0 +1,350 @@
+{
+  "datasets": {
+    "visitantes": {
+      "filas": 481997,
+      "columnas": [
+        "fecha",
+        "anio",
+        "mes_num",
+        "departamento",
+        "ciudad",
+        "pais_residencia",
+        "visitantes_no_residentes"
+      ],
+      "nulos_por_columna": {
+        "fecha": 0,
+        "anio": 0,
+        "mes_num": 0,
+        "departamento": 0,
+        "ciudad": 0,
+        "pais_residencia": 0,
+        "visitantes_no_residentes": 0
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "fecha": "datetime64[ns]",
+        "anio": "Int64",
+        "mes_num": "Int64",
+        "departamento": "object",
+        "ciudad": "object",
+        "pais_residencia": "object",
+        "visitantes_no_residentes": "float64"
+      },
+      "duplicados_departamento_mes": 0,
+      "duplicados_clave_detalle": 0,
+      "meses_invalidos": 0,
+      "fechas_invalidas": 0,
+      "negativos": {
+        "visitantes_no_residentes": 0
+      },
+      "rango_fechas": [
+        "2015-01-01 00:00:00",
+        "2025-10-01 00:00:00"
+      ],
+      "departamentos_unicos": 34,
+      "filas_agregadas": 4299
+    },
+    "rnt": {
+      "filas": 557397,
+      "columnas": [
+        "anio",
+        "departamento",
+        "municipio",
+        "codigo_rnt",
+        "categoria",
+        "num_habitaciones",
+        "num_camas",
+        "num_empleados"
+      ],
+      "nulos_por_columna": {
+        "anio": 0,
+        "departamento": 0,
+        "municipio": 0,
+        "codigo_rnt": 0,
+        "categoria": 0,
+        "num_habitaciones": 64,
+        "num_camas": 241,
+        "num_empleados": 211
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "anio": "Int64",
+        "departamento": "object",
+        "municipio": "object",
+        "codigo_rnt": "object",
+        "categoria": "object",
+        "num_habitaciones": "float64",
+        "num_camas": "float64",
+        "num_empleados": "float64"
+      },
+      "duplicados_clave_detalle": 0,
+      "negativos": {
+        "num_habitaciones": 0,
+        "num_camas": 0,
+        "num_empleados": 0
+      },
+      "rango_anios": [
+        2019,
+        2025
+      ],
+      "departamentos_unicos": 34,
+      "filas_agregadas": 232
+    },
+    "trm": {
+      "filas": 12550,
+      "columnas": [
+        "fecha",
+        "trm"
+      ],
+      "nulos_por_columna": {
+        "fecha": 0,
+        "trm": 0
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "fecha": "datetime64[ns]",
+        "trm": "float64"
+      },
+      "negativos": {
+        "trm": 0
+      },
+      "fechas_invalidas": 0,
+      "rango_fechas": [
+        "1991-11-27 00:00:00",
+        "2026-04-06 00:00:00"
+      ],
+      "filas_mensuales": 414
+    },
+    "aereo_nacional": {
+      "filas": 10487,
+      "columnas": [
+        "fecha",
+        "anio",
+        "mes_num",
+        "departamento",
+        "municipio",
+        "pasajeros_aereos_nacionales"
+      ],
+      "nulos_por_columna": {
+        "fecha": 0,
+        "anio": 0,
+        "mes_num": 0,
+        "departamento": 0,
+        "municipio": 0,
+        "pasajeros_aereos_nacionales": 0
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "fecha": "datetime64[ns]",
+        "anio": "Int64",
+        "mes_num": "Int64",
+        "departamento": "object",
+        "municipio": "object",
+        "pasajeros_aereos_nacionales": "int64"
+      },
+      "duplicados_departamento_mes": 0,
+      "duplicados_clave_detalle": 0,
+      "meses_invalidos": 0,
+      "fechas_invalidas": 0,
+      "negativos": {
+        "pasajeros_aereos_nacionales": 0
+      },
+      "rango_fechas": [
+        "2012-01-01 00:00:00",
+        "2025-09-01 00:00:00"
+      ],
+      "filas_agregadas": 5140
+    },
+    "aereo_internacional": {
+      "filas": 3099,
+      "columnas": [
+        "fecha",
+        "anio",
+        "mes_num",
+        "departamento",
+        "pasajeros_aereos_internacionales"
+      ],
+      "nulos_por_columna": {
+        "fecha": 0,
+        "anio": 0,
+        "mes_num": 0,
+        "departamento": 0,
+        "pasajeros_aereos_internacionales": 0
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "fecha": "datetime64[ns]",
+        "anio": "Int64",
+        "mes_num": "Int64",
+        "departamento": "object",
+        "pasajeros_aereos_internacionales": "int64"
+      },
+      "duplicados_departamento_mes": 0,
+      "duplicados_clave_detalle": 2,
+      "meses_invalidos": 0,
+      "fechas_invalidas": 0,
+      "negativos": {
+        "pasajeros_aereos_internacionales": 0
+      },
+      "rango_fechas": [
+        "2012-01-01 00:00:00",
+        "2025-09-01 00:00:00"
+      ],
+      "filas_agregadas": 3097
+    },
+    "ise": {
+      "filas": 253,
+      "columnas": [
+        "fecha",
+        "ise",
+        "serie_ise"
+      ],
+      "nulos_por_columna": {
+        "fecha": 0,
+        "ise": 0,
+        "serie_ise": 0
+      },
+      "duplicados_exactos": 0,
+      "tipos": {
+        "fecha": "datetime64[ns]",
+        "ise": "float64",
+        "serie_ise": "object"
+      },
+      "negativos": {
+        "ise": 0
+      },
+      "rango_fechas": [
+        "2005-01-01 00:00:00",
+        "2026-01-01 00:00:00"
+      ],
+      "serie": "ajustada_estacional_y_calendario"
+    }
+  },
+  "supuestos_limpieza": [
+    "En los archivos de pasajeros aéreos, el símbolo '-' se interpreta como cero movimientos.",
+    "RNT se usa como variable estructural anual y se replica en cada mes del mismo año.",
+    "La serie del ISE tomada es la ajustada por efecto estacional y calendario.",
+    "SIN ESPECIFICAR se conserva en limpieza, pero se excluye del panel final de modelado.",
+    "Las combinaciones departamento-mes sin registros de visitantes se interpretan como 0."
+  ],
+  "paneles": {
+    "panel_base": {
+      "filas": 4290,
+      "departamentos": 33,
+      "rango_fechas": [
+        "2015-01-01 00:00:00",
+        "2025-10-01 00:00:00"
+      ],
+      "nulos": {
+        "fecha": 0,
+        "anio": 0,
+        "mes_num": 0,
+        "trimestre": 0,
+        "semestre": 0,
+        "departamento": 0,
+        "visitantes_no_residentes": 0,
+        "n_registros_origen": 0,
+        "n_ciudades": 0,
+        "n_paises_residencia": 0,
+        "pasajeros_aereos_nacionales": 33,
+        "n_municipios_nac": 33,
+        "pasajeros_aereos_internacionales": 33,
+        "prestadores_activos": 1584,
+        "rnt_municipios": 1584,
+        "categorias_rnt": 1584,
+        "capacidad_habitaciones": 1584,
+        "capacidad_camas": 1584,
+        "empleo_reportado_rnt": 1584,
+        "trm": 0,
+        "ise": 0,
+        "aereo_nacional_fuera_cobertura": 0,
+        "aereo_internacional_fuera_cobertura": 0,
+        "rnt_fuera_cobertura": 0,
+        "objetivo_faltante": 0,
+        "rnt_faltante": 0,
+        "trm_faltante": 0,
+        "ise_faltante": 0
+      }
+    },
+    "panel_modelo": {
+      "filas": 2673,
+      "departamentos": 33,
+      "rango_fechas": [
+        "2019-01-01 00:00:00",
+        "2025-09-01 00:00:00"
+      ],
+      "nulos": {
+        "fecha": 0,
+        "anio": 0,
+        "mes_num": 0,
+        "trimestre": 0,
+        "semestre": 0,
+        "departamento": 0,
+        "visitantes_no_residentes": 0,
+        "n_registros_origen": 0,
+        "n_ciudades": 0,
+        "n_paises_residencia": 0,
+        "pasajeros_aereos_nacionales": 0,
+        "n_municipios_nac": 0,
+        "pasajeros_aereos_internacionales": 0,
+        "prestadores_activos": 0,
+        "rnt_municipios": 0,
+        "categorias_rnt": 0,
+        "capacidad_habitaciones": 0,
+        "capacidad_camas": 0,
+        "empleo_reportado_rnt": 0,
+        "trm": 0,
+        "ise": 0,
+        "aereo_nacional_fuera_cobertura": 0,
+        "aereo_internacional_fuera_cobertura": 0,
+        "rnt_fuera_cobertura": 0,
+        "objetivo_faltante": 0,
+        "rnt_faltante": 0,
+        "trm_faltante": 0,
+        "ise_faltante": 0
+      }
+    }
+  },
+  "features": {
+    "filas_features_base": 2673,
+    "columnas_features_base": 95,
+    "nulos_por_columna_top30": {
+      "visitantes_var_yoy_lag": 520,
+      "pasajeros_aereos_internacionales_roll_mean_12": 396,
+      "pasajeros_aereos_internacionales_lag_12": 396,
+      "trm_roll_mean_12": 396,
+      "ise_lag_12": 396,
+      "target_h_12": 396,
+      "trm_lag_12": 396,
+      "pasajeros_aereos_nacionales_roll_mean_12": 396,
+      "visitantes_roll_std_12": 396,
+      "pasajeros_aereos_nacionales_lag_12": 396,
+      "visitantes_roll_mean_12": 396,
+      "visitantes_roll_sum_12": 396,
+      "ise_roll_mean_12": 396,
+      "visitantes_lag_12": 396,
+      "visitantes_var_sem_lag": 289,
+      "visitantes_lag_6": 198,
+      "dept_avg_historico_12": 198,
+      "target_h_6": 198,
+      "visitantes_vs_promedio_12": 198,
+      "trm_roll_mean_6": 198,
+      "pasajeros_aereos_internacionales_roll_mean_6": 198,
+      "pasajeros_aereos_nacionales_roll_mean_6": 198,
+      "visitantes_roll_mean_6": 198,
+      "ise_roll_mean_6": 198,
+      "visitantes_roll_sum_6": 198,
+      "visitantes_roll_std_6": 198,
+      "visitantes_var_trim_lag": 192,
+      "visitantes_var_mom_lag": 159,
+      "visitantes_roll_mean_3": 99,
+      "visitantes_roll_std_3": 99
+    },
+    "supuestos_modelado": [
+      "Los lags y rolling usan solo información disponible hasta t-1.",
+      "Los targets target_h_k representan el valor del objetivo en t+k.",
+      "No se imputan los NaN iniciales de lags y rolling para no sesgar el modelado.",
+      "Las proporciones se construyen con protección contra divisiones por cero."
+    ]
+  }
+}

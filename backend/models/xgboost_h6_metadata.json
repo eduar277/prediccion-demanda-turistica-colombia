@@ -1,0 +1,18 @@
+{
+  "modelo": "XGBoost Regressor",
+  "horizonte": "6 meses",
+  "target": "target",
+  "descripcion": "Modelo para predicción de visitantes no residentes por departamento a 6 meses.",
+  "fecha_train_max": "2024-12-01 00:00:00",
+  "fecha_test_min": "2025-01-01 00:00:00",
+  "fecha_test_max": "2025-03-01 00:00:00",
+  "filas_train": 1980,
+  "filas_test": 99,
+  "n_features": 122,
+  "metricas_test": {
+    "MAE": 300.677,
+    "RMSE": 533.1223,
+    "MAPE": 48.1567,
+    "wMAPE": 11.5045
+  }
+}
