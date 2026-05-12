@@ -368,5 +368,126 @@ class TourismPredictionService:
             "descripcion": "Predicción estimada de visitantes no residentes para el departamento seleccionado.",
         }
 
+    def get_periodos_disponibles(self):
+        """
+        Devuelve los periodos disponibles en el panel histórico.
+        Formato: YYYY-MM.
+        """
+        if self.panel is None:
+            return []
 
+        if "fecha" not in self.panel.columns:
+            return []
+
+        df = self.panel.copy()
+        df["periodo"] = df["fecha"].dt.to_period("M").astype(str)
+
+        return sorted(df["periodo"].dropna().unique().tolist())
+
+    def comparar_periodos(self, fecha_a, fecha_b):
+        """
+        Compara la demanda turística entre dos periodos mensuales.
+
+        Parámetros:
+        - fecha_a: periodo base, por ejemplo 2024-07 o 2024-07-01.
+        - fecha_b: periodo de comparación, por ejemplo 2025-07 o 2025-07-01.
+
+        Retorna:
+        - valor en fecha_a
+        - valor en fecha_b
+        - diferencia absoluta
+        - variación porcentual
+        - estado de crecimiento por departamento
+        """
+        if self.panel is None:
+            return []
+
+        if "visitantes_no_residentes" not in self.panel.columns:
+            raise ValueError(
+                "El panel no tiene la columna 'visitantes_no_residentes'."
+            )
+
+        df = self.panel.copy()
+
+        df["fecha"] = pd.to_datetime(df["fecha"])
+        df["periodo"] = df["fecha"].dt.to_period("M")
+
+        periodo_a = pd.to_datetime(fecha_a).to_period("M")
+        periodo_b = pd.to_datetime(fecha_b).to_period("M")
+
+        fecha_a_ref = periodo_a.to_timestamp().strftime("%Y-%m-%d")
+        fecha_b_ref = periodo_b.to_timestamp().strftime("%Y-%m-%d")
+
+        valor_col = "visitantes_no_residentes"
+
+        df_a = (
+            df[df["periodo"] == periodo_a]
+            .groupby("departamento", as_index=False)[valor_col]
+            .sum(min_count=1)
+            .rename(columns={valor_col: "valor_a"})
+        )
+
+        df_b = (
+            df[df["periodo"] == periodo_b]
+            .groupby("departamento", as_index=False)[valor_col]
+            .sum(min_count=1)
+            .rename(columns={valor_col: "valor_b"})
+        )
+
+        comparacion = pd.merge(df_a, df_b, on="departamento", how="outer")
+
+        comparacion["diferencia"] = comparacion["valor_b"] - comparacion["valor_a"]
+
+        comparacion["variacion_pct"] = np.where(
+            (comparacion["valor_a"].notna()) & (comparacion["valor_a"] != 0),
+            (comparacion["diferencia"] / comparacion["valor_a"]) * 100,
+            np.nan,
+        )
+
+        def clasificar_estado(row):
+            if pd.isna(row["valor_a"]) or pd.isna(row["valor_b"]):
+                return "sin_dato"
+
+            if row["diferencia"] > 0:
+                return "crecimiento"
+
+            if row["diferencia"] < 0:
+                return "disminucion"
+
+            return "sin_cambio"
+
+        comparacion["estado"] = comparacion.apply(clasificar_estado, axis=1)
+
+        comparacion = comparacion.sort_values(
+            by="variacion_pct",
+            ascending=False,
+            na_position="last",
+        )
+
+        def limpiar_numero(valor):
+            if pd.isna(valor):
+                return None
+
+            return round(float(valor), 4)
+
+        salida = []
+
+        for _, row in comparacion.iterrows():
+            salida.append(
+                {
+                    "departamento": row["departamento"],
+                    "fecha_a": fecha_a_ref,
+                    "fecha_b": fecha_b_ref,
+                    "periodo_a": str(periodo_a),
+                    "periodo_b": str(periodo_b),
+                    "valor_a": limpiar_numero(row["valor_a"]),
+                    "valor_b": limpiar_numero(row["valor_b"]),
+                    "diferencia": limpiar_numero(row["diferencia"]),
+                    "variacion_pct": limpiar_numero(row["variacion_pct"]),
+                    "estado": row["estado"],
+                }
+            )
+
+        return salida
 service = TourismPredictionService()
+

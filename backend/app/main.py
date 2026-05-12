@@ -136,7 +136,17 @@ def historico_departamento(departamento: str):
 
     return datos
 
+@app.get("/periodos")
+def periodos_disponibles():
+    return service.get_periodos_disponibles()
 
+
+@app.get("/comparacion/periodos")
+def comparacion_periodos(fecha_a: str, fecha_b: str):
+    try:
+        return service.comparar_periodos(fecha_a=fecha_a, fecha_b=fecha_b)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 # Endpoint anterior para compatibilidad. Usa H6 por defecto.
 @app.post("/predict/{departamento}")
 def predict_departamento_default(departamento: str):

@@ -48,3 +48,19 @@ export async function getGeojson() {
   const response = await api.get("/geojson");
   return response.data;
 }
+
+export async function getPeriodosDisponibles() {
+  const response = await api.get("/periodos");
+  return response.data;
+}
+
+export async function getComparacionPeriodos(fechaA, fechaB) {
+  const response = await api.get("/comparacion/periodos", {
+    params: {
+      fecha_a: fechaA,
+      fecha_b: fechaB,
+    },
+  });
+
+  return response.data;
+}
