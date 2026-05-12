@@ -7,9 +7,11 @@ import {
   getMetadataModelo,
   getPrediccionesMapa,
   predictDepartamento,
+  getHistoricoDepartamento,
 } from "./services/api";
 import TourismMap from "./components/TourismMap";
 import "./App.css";
+import DepartmentChart from "./components/DepartmentChart";
 
 function App() {
   const [health, setHealth] = useState(null);
@@ -29,6 +31,7 @@ function App() {
   const [cargando, setCargando] = useState(false);
   const [cargandoInicial, setCargandoInicial] = useState(true);
   const [error, setError] = useState("");
+  const [historicoDepartamento, setHistoricoDepartamento] = useState([]);
 
   useEffect(() => {
     cargarDatosIniciales();
@@ -58,7 +61,10 @@ function App() {
 
       setDepartamentoSeleccionado(departamentoInicial);
 
-      await cargarDatosHorizonte("h6", departamentoInicial);
+      await Promise.all([
+  cargarDatosHorizonte("h6", departamentoInicial),
+  cargarHistoricoDepartamento(departamentoInicial),
+]);
     } catch (err) {
       console.error(err);
       setError(
@@ -116,11 +122,23 @@ function App() {
       setCargando(false);
     }
   }
-
-  async function seleccionarDepartamento(departamento) {
-    setDepartamentoSeleccionado(departamento);
-    await generarPrediccion(departamento, horizonteSeleccionado);
+async function cargarHistoricoDepartamento(departamento) {
+  try {
+    const historico = await getHistoricoDepartamento(departamento);
+    setHistoricoDepartamento(historico);
+  } catch (err) {
+    console.error(err);
+    setHistoricoDepartamento([]);
   }
+}
+  async function seleccionarDepartamento(departamento) {
+  setDepartamentoSeleccionado(departamento);
+
+  await Promise.all([
+    generarPrediccion(departamento, horizonteSeleccionado),
+    cargarHistoricoDepartamento(departamento),
+  ]);
+}
 
   async function seleccionarDesdeMapa(departamento) {
     await seleccionarDepartamento(departamento);
@@ -351,7 +369,13 @@ function App() {
           </article>
         </aside>
       </section>
-
+      <section className="analysis-section">
+  <DepartmentChart
+    historico={historicoDepartamento}
+    prediccion={prediccion}
+    departamento={departamentoSeleccionado}
+  />
+</section>
       <section className="bottom-grid">
         <article className="card">
           <div className="section-heading">
