@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getComparacionPeriodos } from "../services/api";
+import { exportToCsv, fechaArchivo } from "../utils/exportCsv";
 
 function convertirNumero(valor) {
   if (valor === null || valor === undefined) return null;
@@ -73,7 +74,24 @@ export default function PeriodComparison({ periodos = [] }) {
       setCargando(false);
     }
   }
-
+  function exportarComparacionPeriodos() {
+  exportToCsv(
+    `comparacion_periodos_${periodoA}_vs_${periodoB}_${fechaArchivo()}.csv`,
+    comparacion,
+    [
+      { key: "departamento", label: "Departamento" },
+      { key: "periodo_a", label: "Periodo base" },
+      { key: "periodo_b", label: "Periodo comparación" },
+      { key: "fecha_a", label: "Fecha base" },
+      { key: "fecha_b", label: "Fecha comparación" },
+      { key: "valor_a", label: "Valor periodo base" },
+      { key: "valor_b", label: "Valor periodo comparación" },
+      { key: "diferencia", label: "Diferencia" },
+      { key: "variacion_pct", label: "Variación porcentual" },
+      { key: "estado", label: "Estado" },
+    ]
+  );
+}
   const resumen = useMemo(() => {
     const totalA = sumar(comparacion, "valor_a");
     const totalB = sumar(comparacion, "valor_b");
@@ -160,14 +178,25 @@ export default function PeriodComparison({ periodos = [] }) {
           </select>
         </div>
 
-        <button
-          className="primary-button period-button"
-          type="button"
-          onClick={() => cargarComparacion()}
-          disabled={cargando}
-        >
-          {cargando ? "Comparando..." : "Comparar periodos"}
-        </button>
+        <div className="period-action-buttons">
+  <button
+    className="primary-button period-button"
+    type="button"
+    onClick={() => cargarComparacion()}
+    disabled={cargando}
+  >
+    {cargando ? "Comparando..." : "Comparar periodos"}
+  </button>
+
+  <button
+    className="secondary-button period-button"
+    type="button"
+    onClick={exportarComparacionPeriodos}
+    disabled={!comparacion.length}
+  >
+    Exportar comparación
+  </button>
+</div>
       </div>
 
       {error && <div className="alert">{error}</div>}

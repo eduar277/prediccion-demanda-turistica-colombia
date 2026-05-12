@@ -1156,3 +1156,79 @@ select:focus {
     width: 100%;
   }
 }
+
+.export-section {
+  margin-bottom: 22px;
+}
+
+.export-card {
+  padding: 26px;
+}
+
+.export-intro {
+  max-width: 980px;
+  margin-bottom: 20px;
+}
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.secondary-button {
+  min-height: 46px;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-weight: 900;
+  padding: 11px 16px;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.secondary-button:hover {
+  transform: translateY(-1px);
+  background: #eff6ff;
+  border-color: #93c5fd;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.period-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.period-action-buttons .period-button {
+  min-width: 190px;
+}
+
+@media (max-width: 1000px) {
+  .period-action-buttons {
+    flex-direction: column;
+  }
+
+  .period-action-buttons .period-button {
+    width: 100%;
+  }
+
+  .export-actions {
+    flex-direction: column;
+  }
+
+  .export-actions .secondary-button {
+    width: 100%;
+  }
+}

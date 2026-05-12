@@ -15,6 +15,7 @@ import "./App.css";
 import DepartmentChart from "./components/DepartmentChart";
 import HorizonComparison from "./components/HorizonComparison";
 import PeriodComparison from "./components/PeriodComparison";
+import ExportTools from "./components/ExportTools";
 function App() {
   const [health, setHealth] = useState(null);
   const [metadata, setMetadata] = useState(null);
@@ -392,6 +393,14 @@ async function cargarHistoricoDepartamento(departamento) {
 </section>
       <section className="period-comparison-section">
   <PeriodComparison periodos={periodosDisponibles} />
+</section>
+      <section className="export-section">
+  <ExportTools
+    prediccionesMapa={prediccionesMapa}
+    horizontes={horizontes}
+    horizonteSeleccionado={horizonteSeleccionado}
+    prediccion={prediccion}
+  />
 </section>
       <section className="bottom-grid">
         <article className="card">
