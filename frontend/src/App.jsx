@@ -12,7 +12,7 @@ import {
 import TourismMap from "./components/TourismMap";
 import "./App.css";
 import DepartmentChart from "./components/DepartmentChart";
-
+import HorizonComparison from "./components/HorizonComparison";
 function App() {
   const [health, setHealth] = useState(null);
   const [metadata, setMetadata] = useState(null);
@@ -267,7 +267,13 @@ async function cargarHistoricoDepartamento(departamento) {
           <p>Territorios disponibles en el sistema</p>
         </article>
       </section>
-
+      <section className="horizon-comparison-section">
+  <HorizonComparison
+    horizontes={horizontes}
+    horizonteSeleccionado={horizonteSeleccionado}
+    onSelectHorizonte={cambiarHorizonte}
+  />
+      </section>
       <section className="main-grid">
         <section className="map-panel">
           <TourismMap

@@ -715,3 +715,266 @@ select:focus {
   color: #64748b;
   font-weight: 700;
 }
+
+.horizon-comparison-section {
+  margin-bottom: 22px;
+}
+
+.horizon-comparison-card {
+  padding: 26px;
+}
+
+.horizon-comparison-intro {
+  max-width: 980px;
+  margin-bottom: 22px;
+}
+
+.horizon-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.horizon-model-card {
+  width: 100%;
+  min-height: 220px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #f8fafc;
+  color: #0f172a;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.horizon-model-card:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  background: #eff6ff;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.12);
+}
+
+.horizon-model-card.active {
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.98), rgba(15, 23, 42, 0.98));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 20px 42px rgba(37, 99, 235, 0.24);
+}
+
+.horizon-model-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.horizon-model-header strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.2rem;
+}
+
+.horizon-code {
+  display: block;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.horizon-model-card.active .horizon-code {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.best-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.horizon-main-metric {
+  margin-bottom: 12px;
+}
+
+.horizon-main-metric span {
+  display: block;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.horizon-main-metric strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 2rem;
+  letter-spacing: -0.05em;
+}
+
+.horizon-model-card.active .horizon-main-metric span {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.error-bar {
+  width: 100%;
+  height: 9px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.error-bar div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
+
+.horizon-model-card.active .error-bar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.horizon-model-card.active .error-bar div {
+  background: #ffffff;
+}
+
+.horizon-mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.horizon-mini-metrics div {
+  padding: 9px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.horizon-model-card.active .horizon-mini-metrics div {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.horizon-mini-metrics span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.horizon-model-card.active .horizon-mini-metrics span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.horizon-mini-metrics strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.horizon-model-card.active .horizon-mini-metrics strong {
+  color: #ffffff;
+}
+
+.horizon-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+.horizon-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.horizon-table th,
+.horizon-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #edf2f7;
+  color: #334155;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.horizon-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.horizon-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.horizon-table .active-row td {
+  background: #eff6ff;
+}
+
+.table-link-button {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  font-weight: 900;
+  padding: 0;
+  cursor: pointer;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.status-chip.good {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-chip.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-chip.neutral {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+@media (max-width: 1180px) {
+  .horizon-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .horizon-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
