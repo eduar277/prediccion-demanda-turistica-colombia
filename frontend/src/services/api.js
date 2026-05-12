@@ -12,8 +12,13 @@ export async function getHealth() {
   return response.data;
 }
 
-export async function getMetadataModelo() {
-  const response = await api.get("/modelo/metadata");
+export async function getHorizontes() {
+  const response = await api.get("/horizontes");
+  return response.data;
+}
+
+export async function getMetadataModelo(horizonte = "h6") {
+  const response = await api.get(`/modelo/metadata/${encodeURIComponent(horizonte)}`);
   return response.data;
 }
 
@@ -22,8 +27,10 @@ export async function getDepartamentos() {
   return response.data;
 }
 
-export async function predictDepartamento(departamento) {
-  const response = await api.post(`/predict/${encodeURIComponent(departamento)}`);
+export async function predictDepartamento(departamento, horizonte = "h6") {
+  const response = await api.post(
+    `/predict/${encodeURIComponent(horizonte)}/${encodeURIComponent(departamento)}`
+  );
   return response.data;
 }
 
@@ -32,8 +39,8 @@ export async function getHistoricoDepartamento(departamento) {
   return response.data;
 }
 
-export async function getPrediccionesMapa() {
-  const response = await api.get("/predicciones/mapa");
+export async function getPrediccionesMapa(horizonte = "h6") {
+  const response = await api.get(`/predicciones/mapa/${encodeURIComponent(horizonte)}`);
   return response.data;
 }
 

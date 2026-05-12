@@ -1,26 +1,26 @@
 {
   "modelo": "XGBoost Regressor",
-  "horizonte": "h6",
-  "meses_horizonte": 6,
+  "horizonte": "h12",
+  "meses_horizonte": 12,
   "target": "target",
-  "descripcion": "Predicción de visitantes no residentes a 6 meses.",
-  "dataset_entrenamiento": "12_dataset_modelado_h6.csv",
+  "descripcion": "Predicción de visitantes no residentes a 12 meses.",
+  "dataset_entrenamiento": "12_dataset_modelado_h12.csv",
   "criterio_split": "Split temporal por fecha_predicha. Train: fecha_predicha < 2025-01-01. Test: fecha_predicha >= 2025-01-01.",
   "fecha_base_min": "2020-01-01 00:00:00",
-  "fecha_base_max": "2025-03-01 00:00:00",
-  "fecha_predicha_min": "2020-07-01 00:00:00",
+  "fecha_base_max": "2024-09-01 00:00:00",
+  "fecha_predicha_min": "2021-01-01 00:00:00",
   "fecha_predicha_max": "2025-09-01 00:00:00",
-  "fecha_train_predicha_min": "2020-07-01 00:00:00",
+  "fecha_train_predicha_min": "2021-01-01 00:00:00",
   "fecha_train_predicha_max": "2024-12-01 00:00:00",
   "fecha_test_predicha_min": "2025-01-01 00:00:00",
   "fecha_test_predicha_max": "2025-09-01 00:00:00",
-  "filas_train": 1782,
+  "filas_train": 1584,
   "filas_test": 297,
   "n_features": 122,
   "metricas_test": {
-    "MAE": 346.0275,
-    "RMSE": 678.4569,
-    "MAPE": 43.068,
-    "wMAPE": 13.3172
+    "MAE": 388.576,
+    "RMSE": 755.684,
+    "MAPE": 32.7996,
+    "wMAPE": 14.9547
   }
 }

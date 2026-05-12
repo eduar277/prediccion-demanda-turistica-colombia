@@ -122,7 +122,7 @@ export default function TourismMap({
     const pred = prediccionesPorDepartamento.get(key);
 
     const valorPredicho = pred?.prediccion;
-    const fecha = pred?.fecha;
+    const fecha = pred?.fecha_predicha || pred?.fecha;
 
     layer.bindTooltip(
       `

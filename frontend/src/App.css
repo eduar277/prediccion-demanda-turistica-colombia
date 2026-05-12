@@ -529,3 +529,74 @@ select:focus {
     font-size: 2.3rem;
   }
 }
+
+.toolbar-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 22px 24px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #e2e8f0;
+  border-radius: 26px;
+  box-shadow:
+    0 20px 55px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.horizon-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.horizon-button {
+  min-width: 92px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 900;
+  padding: 10px 14px;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.horizon-button:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.horizon-button.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: transparent;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+}
+
+.horizon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+@media (max-width: 820px) {
+  .toolbar-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .horizon-switch {
+    width: 100%;
+  }
+
+  .horizon-button {
+    flex: 1;
+  }
+}

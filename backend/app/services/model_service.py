@@ -5,100 +5,167 @@ import numpy as np
 import pandas as pd
 
 from app.core.config import (
-    MODEL_PATH,
-    FEATURES_PATH,
-    METADATA_PATH,
     PANEL_PATH,
-    DATASET_H6_PATH,
     GEOJSON_PATH,
-    PREDICTIONS_PATH,
+    HORIZONTES,
+    DEFAULT_HORIZON,
 )
 
 
 class TourismPredictionService:
     def __init__(self):
-        self.model = None
-        self.feature_columns = []
+        self.models = {}
+        self.feature_columns = {}
         self.metadata = {}
+        self.datasets = {}
+        self.predictions = {}
+
         self.panel = None
-        self.dataset_h6 = None
-        self.predictions = None
         self.geojson = None
 
     def load_all(self):
         """
-        Carga el modelo, las columnas esperadas, la metadata,
-        los datasets y el GeoJSON necesarios para la API.
+        Carga todos los modelos, features, metadata, datasets,
+        predicciones, panel histórico y GeoJSON.
         """
-        self.load_model()
+        self.load_models()
         self.load_data()
         return True
 
-    def load_model(self):
+    def validar_horizonte(self, horizonte):
         """
-        Carga el modelo XGBoost guardado, la lista de features
-        usadas durante el entrenamiento y la metadata del modelo.
+        Valida que el horizonte solicitado exista.
         """
-        if not MODEL_PATH.exists():
-            raise FileNotFoundError(f"No se encontró el modelo: {MODEL_PATH}")
+        horizonte = horizonte.lower().strip()
 
-        if not FEATURES_PATH.exists():
-            raise FileNotFoundError(f"No se encontró el archivo de features: {FEATURES_PATH}")
+        if horizonte not in HORIZONTES:
+            disponibles = ", ".join(HORIZONTES.keys())
+            raise ValueError(
+                f"Horizonte no válido: {horizonte}. Horizontes disponibles: {disponibles}"
+            )
 
-        if not METADATA_PATH.exists():
-            raise FileNotFoundError(f"No se encontró la metadata: {METADATA_PATH}")
+        return horizonte
 
-        self.model = joblib.load(MODEL_PATH)
+    def load_models(self):
+        """
+        Carga los modelos XGBoost, las columnas esperadas
+        y la metadata para cada horizonte.
+        """
+        for horizonte, config in HORIZONTES.items():
+            model_path = config["model_path"]
+            features_path = config["features_path"]
+            metadata_path = config["metadata_path"]
 
-        with open(FEATURES_PATH, "r", encoding="utf-8") as f:
-            self.feature_columns = json.load(f)
+            if not model_path.exists():
+                raise FileNotFoundError(f"No se encontró el modelo: {model_path}")
 
-        with open(METADATA_PATH, "r", encoding="utf-8") as f:
-            self.metadata = json.load(f)
+            if not features_path.exists():
+                raise FileNotFoundError(f"No se encontró el archivo de features: {features_path}")
+
+            if not metadata_path.exists():
+                raise FileNotFoundError(f"No se encontró la metadata: {metadata_path}")
+
+            self.models[horizonte] = joblib.load(model_path)
+
+            with open(features_path, "r", encoding="utf-8") as f:
+                self.feature_columns[horizonte] = json.load(f)
+
+            with open(metadata_path, "r", encoding="utf-8") as f:
+                self.metadata[horizonte] = json.load(f)
 
     def load_data(self):
         """
-        Carga los archivos de datos necesarios:
-        - panel histórico limpio
-        - dataset de modelado H6
-        - predicciones generadas
-        - GeoJSON de departamentos
+        Carga los datasets por horizonte, predicciones generadas,
+        panel histórico y GeoJSON.
         """
         if PANEL_PATH.exists():
             self.panel = pd.read_csv(PANEL_PATH)
             self.panel["fecha"] = pd.to_datetime(self.panel["fecha"])
 
-        if DATASET_H6_PATH.exists():
-            self.dataset_h6 = pd.read_csv(DATASET_H6_PATH)
-            self.dataset_h6["fecha"] = pd.to_datetime(self.dataset_h6["fecha"])
-
-        if PREDICTIONS_PATH.exists():
-            self.predictions = pd.read_csv(PREDICTIONS_PATH)
-            self.predictions["fecha"] = pd.to_datetime(self.predictions["fecha"])
-
         if GEOJSON_PATH.exists():
             with open(GEOJSON_PATH, "r", encoding="utf-8") as f:
                 self.geojson = json.load(f)
 
+        for horizonte, config in HORIZONTES.items():
+            dataset_path = config["dataset_path"]
+            predictions_path = config["predictions_path"]
+
+            if dataset_path.exists():
+                df_dataset = pd.read_csv(dataset_path)
+                df_dataset["fecha"] = pd.to_datetime(df_dataset["fecha"])
+                self.datasets[horizonte] = df_dataset
+
+            if predictions_path.exists():
+                df_pred = pd.read_csv(predictions_path)
+                df_pred["fecha"] = pd.to_datetime(df_pred["fecha"])
+
+                if "fecha_predicha" in df_pred.columns:
+                    df_pred["fecha_predicha"] = pd.to_datetime(df_pred["fecha_predicha"])
+
+                self.predictions[horizonte] = df_pred
+
     def get_health(self):
         """
-        Devuelve el estado general del servicio.
-        Sirve para verificar si el backend cargó correctamente.
+        Devuelve estado general del backend y de los artefactos cargados.
         """
+        horizontes_estado = {}
+
+        for horizonte in HORIZONTES.keys():
+            horizontes_estado[horizonte] = {
+                "modelo_cargado": horizonte in self.models,
+                "features_cargadas": len(self.feature_columns.get(horizonte, [])),
+                "metadata_cargada": horizonte in self.metadata,
+                "dataset_cargado": horizonte in self.datasets,
+                "predicciones_cargadas": horizonte in self.predictions,
+            }
+
         return {
             "status": "ok",
-            "modelo_cargado": self.model is not None,
-            "features_cargadas": len(self.feature_columns),
+            "horizonte_default": DEFAULT_HORIZON,
             "panel_cargado": self.panel is not None,
-            "dataset_h6_cargado": self.dataset_h6 is not None,
-            "predicciones_cargadas": self.predictions is not None,
             "geojson_cargado": self.geojson is not None,
+            "horizontes": horizontes_estado,
+            # Compatibilidad con frontend anterior:
+            "modelo_cargado": DEFAULT_HORIZON in self.models,
+            "features_cargadas": len(self.feature_columns.get(DEFAULT_HORIZON, [])),
+            "dataset_h6_cargado": DEFAULT_HORIZON in self.datasets,
+            "predicciones_cargadas": DEFAULT_HORIZON in self.predictions,
         }
 
-    def get_metadata(self):
+    def get_horizontes(self):
         """
-        Devuelve la metadata del modelo:
-        métricas, horizonte, número de features, fechas de prueba, etc.
+        Devuelve los horizontes disponibles para el frontend.
+        """
+        salida = []
+
+        for horizonte, config in HORIZONTES.items():
+            meta = self.metadata.get(horizonte, {})
+            metricas = meta.get("metricas_test", {})
+
+            salida.append(
+                {
+                    "id": horizonte,
+                    "label": config["label"],
+                    "meses": config["meses"],
+                    "modelo_cargado": horizonte in self.models,
+                    "dataset_cargado": horizonte in self.datasets,
+                    "predicciones_cargadas": horizonte in self.predictions,
+                    "metricas_test": metricas,
+                }
+            )
+
+        return salida
+
+    def get_metadata(self, horizonte=DEFAULT_HORIZON):
+        """
+        Devuelve metadata de un horizonte específico.
+        """
+        horizonte = self.validar_horizonte(horizonte)
+        return self.metadata.get(horizonte, {})
+
+    def get_metadata_all(self):
+        """
+        Devuelve metadata de todos los horizontes.
         """
         return self.metadata
 
@@ -109,24 +176,25 @@ class TourismPredictionService:
         if self.panel is None:
             return []
 
-        departamentos = sorted(self.panel["departamento"].dropna().unique().tolist())
-        return departamentos
+        return sorted(self.panel["departamento"].dropna().unique().tolist())
 
     def get_geojson(self):
         """
-        Devuelve el GeoJSON de departamentos de Colombia.
+        Devuelve GeoJSON de departamentos.
         """
         return self.geojson
 
-    def get_predicciones(self, departamento=None):
+    def get_predicciones(self, horizonte=DEFAULT_HORIZON, departamento=None):
         """
-        Devuelve las predicciones generadas.
+        Devuelve predicciones generadas por horizonte.
         Puede filtrar por departamento.
         """
-        if self.predictions is None:
+        horizonte = self.validar_horizonte(horizonte)
+
+        if horizonte not in self.predictions:
             return []
 
-        df = self.predictions.copy()
+        df = self.predictions[horizonte].copy()
 
         if departamento:
             departamento = departamento.upper().strip()
@@ -134,32 +202,53 @@ class TourismPredictionService:
 
         df["fecha"] = df["fecha"].dt.strftime("%Y-%m-%d")
 
+        if "fecha_predicha" in df.columns:
+            df["fecha_predicha"] = df["fecha_predicha"].dt.strftime("%Y-%m-%d")
+
         return df.to_dict(orient="records")
 
-    def get_predicciones_mapa(self):
+    def get_predicciones_mapa(self, horizonte=DEFAULT_HORIZON):
         """
-        Devuelve las predicciones para el mapa.
-        Usa la fecha más reciente disponible en el archivo de predicciones.
+        Devuelve las predicciones para pintar el mapa,
+        usando la fecha predicha más reciente disponible.
         """
-        if self.predictions is None:
+        horizonte = self.validar_horizonte(horizonte)
+
+        if horizonte not in self.predictions:
             return []
 
-        df = self.predictions.copy()
+        df = self.predictions[horizonte].copy()
 
-        fecha_max = df["fecha"].max()
-        df = df[df["fecha"] == fecha_max].copy()
+        if "fecha_predicha" in df.columns:
+            fecha_ref = df["fecha_predicha"].max()
+            df = df[df["fecha_predicha"] == fecha_ref].copy()
+        else:
+            fecha_ref = df["fecha"].max()
+            df = df[df["fecha"] == fecha_ref].copy()
 
         df["fecha"] = df["fecha"].dt.strftime("%Y-%m-%d")
 
-        columnas = ["fecha", "departamento", "target", "prediccion", "error_abs"]
+        if "fecha_predicha" in df.columns:
+            df["fecha_predicha"] = df["fecha_predicha"].dt.strftime("%Y-%m-%d")
+
+        columnas = [
+            "fecha",
+            "fecha_predicha",
+            "departamento",
+            "target",
+            "prediccion",
+            "error_abs",
+            "horizonte",
+            "meses_horizonte",
+        ]
+
         columnas = [col for col in columnas if col in df.columns]
 
         return df[columnas].to_dict(orient="records")
 
     def get_historico_departamento(self, departamento):
         """
-        Devuelve la serie histórica de un departamento.
-        Se usará en React para graficar comportamiento histórico.
+        Devuelve histórico del panel para un departamento.
         """
         if self.panel is None:
             return []
@@ -187,31 +276,34 @@ class TourismPredictionService:
 
         return df[columnas].to_dict(orient="records")
 
-    def preparar_features_ultima_fila(self, departamento):
+    def preparar_features_ultima_fila(self, departamento, horizonte=DEFAULT_HORIZON):
         """
-        Toma la última fila disponible de un departamento en el dataset H6
-        y la transforma para que tenga exactamente las mismas columnas
-        usadas durante el entrenamiento del modelo.
+        Toma la última fila disponible del departamento para el horizonte indicado
+        y la transforma para que coincida con las columnas usadas al entrenar.
         """
-        if self.dataset_h6 is None:
-            raise ValueError("No está cargado el dataset H6.")
+        horizonte = self.validar_horizonte(horizonte)
+
+        if horizonte not in self.datasets:
+            raise ValueError(f"No está cargado el dataset para {horizonte}")
 
         departamento = departamento.upper().strip()
 
-        df = self.dataset_h6.copy()
+        df = self.datasets[horizonte].copy()
         df = df[df["departamento"].str.upper().str.strip() == departamento]
 
         if df.empty:
-            raise ValueError(f"No hay datos para el departamento: {departamento}")
+            raise ValueError(
+                f"No hay datos para el departamento {departamento} en el horizonte {horizonte}"
+            )
 
         df = df.sort_values("fecha")
         ultima = df.tail(1).copy()
 
-        # Convertimos departamento en variables dummy, igual que en entrenamiento.
         ultima_modelo = pd.get_dummies(ultima, columns=["departamento"], drop_first=False)
 
         columnas_excluir = [
             "fecha",
+            "fecha_predicha",
             "target",
             "target_h_1",
             "target_h_3",
@@ -222,54 +314,54 @@ class TourismPredictionService:
         columnas_excluir = [col for col in columnas_excluir if col in ultima_modelo.columns]
 
         X = ultima_modelo.drop(columns=columnas_excluir)
-
-        # Dejamos solo variables numéricas y booleanas.
         X = X.select_dtypes(include=["number", "bool"]).copy()
 
-        # Convertimos booleanos a 0/1.
         for col in X.select_dtypes(include=["bool"]).columns:
             X[col] = X[col].astype(int)
 
-        # Reemplazamos infinitos por NaN.
         X = X.replace([np.inf, -np.inf], np.nan)
 
-        # Agregamos columnas faltantes para respetar exactamente
-        # la estructura usada durante el entrenamiento.
-        for col in self.feature_columns:
+        expected_features = self.feature_columns[horizonte]
+
+        for col in expected_features:
             if col not in X.columns:
                 X[col] = 0
 
-        # Reordenamos las columnas exactamente como espera el modelo.
-        X = X[self.feature_columns]
-
-        # En predicción puntual, cualquier faltante residual se reemplaza por 0.
+        X = X[expected_features]
         X = X.fillna(0)
 
         fecha_base = ultima["fecha"].iloc[0]
 
         return X, fecha_base
 
-    def predict_departamento(self, departamento):
+    def predict_departamento(self, departamento, horizonte=DEFAULT_HORIZON):
         """
-        Genera una predicción a 6 meses para el departamento indicado,
-        usando la última fila disponible del dataset H6.
+        Genera predicción para un departamento y un horizonte específico.
         """
-        if self.model is None:
-            raise ValueError("Modelo no cargado.")
+        horizonte = self.validar_horizonte(horizonte)
 
-        X, fecha_base = self.preparar_features_ultima_fila(departamento)
+        if horizonte not in self.models:
+            raise ValueError(f"Modelo no cargado para el horizonte {horizonte}")
 
-        pred = float(self.model.predict(X)[0])
+        config = HORIZONTES[horizonte]
+        meses = config["meses"]
 
-        # La demanda turística no puede ser negativa.
+        X, fecha_base = self.preparar_features_ultima_fila(
+            departamento=departamento,
+            horizonte=horizonte,
+        )
+
+        pred = float(self.models[horizonte].predict(X)[0])
         pred = max(pred, 0)
 
-        fecha_predicha = fecha_base + pd.DateOffset(months=6)
+        fecha_predicha = fecha_base + pd.DateOffset(months=meses)
 
         return {
             "departamento": departamento.upper().strip(),
-            "modelo": "XGBoost H6",
-            "horizonte": "6 meses",
+            "modelo": f"XGBoost {horizonte.upper()}",
+            "horizonte": horizonte,
+            "horizonte_label": config["label"],
+            "meses_horizonte": meses,
             "fecha_base": fecha_base.strftime("%Y-%m-%d"),
             "fecha_predicha": fecha_predicha.strftime("%Y-%m-%d"),
             "prediccion_visitantes": round(pred, 2),

@@ -3,6 +3,7 @@ import {
   getDepartamentos,
   getGeojson,
   getHealth,
+  getHorizontes,
   getMetadataModelo,
   getPrediccionesMapa,
   predictDepartamento,
@@ -13,9 +14,13 @@ import "./App.css";
 function App() {
   const [health, setHealth] = useState(null);
   const [metadata, setMetadata] = useState(null);
+  const [horizontes, setHorizontes] = useState([]);
+
   const [departamentos, setDepartamentos] = useState([]);
   const [departamentoSeleccionado, setDepartamentoSeleccionado] =
     useState("ANTIOQUIA");
+
+  const [horizonteSeleccionado, setHorizonteSeleccionado] = useState("h6");
 
   const [prediccion, setPrediccion] = useState(null);
   const [geojson, setGeojson] = useState(null);
@@ -34,33 +39,26 @@ function App() {
       setError("");
       setCargandoInicial(true);
 
-      const [
-        healthData,
-        metadataData,
-        departamentosData,
-        geojsonData,
-        prediccionesMapaData,
-      ] = await Promise.all([
-        getHealth(),
-        getMetadataModelo(),
-        getDepartamentos(),
-        getGeojson(),
-        getPrediccionesMapa(),
-      ]);
+      const [healthData, horizontesData, departamentosData, geojsonData] =
+        await Promise.all([
+          getHealth(),
+          getHorizontes(),
+          getDepartamentos(),
+          getGeojson(),
+        ]);
 
       setHealth(healthData);
-      setMetadata(metadataData);
+      setHorizontes(horizontesData);
       setDepartamentos(departamentosData);
       setGeojson(geojsonData);
-      setPrediccionesMapa(prediccionesMapaData);
 
-      if (departamentosData.includes("ANTIOQUIA")) {
-        setDepartamentoSeleccionado("ANTIOQUIA");
-        await generarPrediccion("ANTIOQUIA");
-      } else if (departamentosData.length > 0) {
-        setDepartamentoSeleccionado(departamentosData[0]);
-        await generarPrediccion(departamentosData[0]);
-      }
+      const departamentoInicial = departamentosData.includes("ANTIOQUIA")
+        ? "ANTIOQUIA"
+        : departamentosData[0];
+
+      setDepartamentoSeleccionado(departamentoInicial);
+
+      await cargarDatosHorizonte("h6", departamentoInicial);
     } catch (err) {
       console.error(err);
       setError(
@@ -71,12 +69,43 @@ function App() {
     }
   }
 
-  async function generarPrediccion(departamento = departamentoSeleccionado) {
+  async function cargarDatosHorizonte(horizonte, departamento) {
     try {
       setCargando(true);
       setError("");
 
-      const data = await predictDepartamento(departamento);
+      const [metadataData, prediccionesMapaData, prediccionData] =
+        await Promise.all([
+          getMetadataModelo(horizonte),
+          getPrediccionesMapa(horizonte),
+          predictDepartamento(departamento, horizonte),
+        ]);
+
+      setMetadata(metadataData);
+      setPrediccionesMapa(prediccionesMapaData);
+      setPrediccion(prediccionData);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar los datos para el horizonte seleccionado.");
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function cambiarHorizonte(nuevoHorizonte) {
+    setHorizonteSeleccionado(nuevoHorizonte);
+    await cargarDatosHorizonte(nuevoHorizonte, departamentoSeleccionado);
+  }
+
+  async function generarPrediccion(
+    departamento = departamentoSeleccionado,
+    horizonte = horizonteSeleccionado
+  ) {
+    try {
+      setCargando(true);
+      setError("");
+
+      const data = await predictDepartamento(departamento, horizonte);
       setPrediccion(data);
     } catch (err) {
       console.error(err);
@@ -88,9 +117,13 @@ function App() {
     }
   }
 
-  async function seleccionarDesdeMapa(departamento) {
+  async function seleccionarDepartamento(departamento) {
     setDepartamentoSeleccionado(departamento);
-    await generarPrediccion(departamento);
+    await generarPrediccion(departamento, horizonteSeleccionado);
+  }
+
+  async function seleccionarDesdeMapa(departamento) {
+    await seleccionarDepartamento(departamento);
   }
 
   function formatearNumero(valor) {
@@ -109,9 +142,19 @@ function App() {
     return Number(valor).toFixed(decimales);
   }
 
+  const horizonteActivo = useMemo(() => {
+    return (
+      horizontes.find((item) => item.id === horizonteSeleccionado) || {
+        id: "h6",
+        label: "6 meses",
+        meses: 6,
+      }
+    );
+  }, [horizontes, horizonteSeleccionado]);
+
   const fechaMapa = useMemo(() => {
     if (!prediccionesMapa.length) return "-";
-    return prediccionesMapa[0]?.fecha || "-";
+    return prediccionesMapa[0]?.fecha_predicha || prediccionesMapa[0]?.fecha || "-";
   }, [prediccionesMapa]);
 
   const topDepartamentos = useMemo(() => {
@@ -140,8 +183,8 @@ function App() {
           <p className="eyebrow">Sistema de IA para turismo</p>
           <h1>Predicción de demanda turística departamental</h1>
           <p className="subtitle">
-            Dashboard conectado a FastAPI y a un modelo XGBoost H6 para estimar
-            visitantes no residentes por departamento en Colombia.
+            Dashboard conectado a FastAPI y modelos XGBoost multihorizonte para
+            estimar visitantes no residentes por departamento en Colombia.
           </p>
         </div>
 
@@ -149,17 +192,41 @@ function App() {
           <span className={health?.modelo_cargado ? "pill online" : "pill offline"}>
             {health?.modelo_cargado ? "Modelo activo" : "Modelo no disponible"}
           </span>
-          <span className="pill">XGBoost H6</span>
+          <span className="pill">XGBoost multihorizonte</span>
         </div>
       </header>
 
       {error && <div className="alert">{error}</div>}
 
+      <section className="toolbar-card">
+        <div>
+          <p className="section-kicker">Horizonte de predicción</p>
+          <h2>Selecciona el plazo de análisis</h2>
+        </div>
+
+        <div className="horizon-switch">
+          {horizontes.map((horizonte) => (
+            <button
+              key={horizonte.id}
+              className={
+                horizonteSeleccionado === horizonte.id
+                  ? "horizon-button active"
+                  : "horizon-button"
+              }
+              onClick={() => cambiarHorizonte(horizonte.id)}
+              disabled={cargando || cargandoInicial}
+            >
+              {horizonte.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="kpi-grid">
         <article className="kpi-card accent">
           <span className="kpi-label">Predicción total mapa</span>
           <strong className="kpi-value">{formatearNumero(totalPredicho)}</strong>
-          <p>Visitantes estimados en la fecha activa</p>
+          <p>Visitantes estimados para la fecha activa del mapa</p>
         </article>
 
         <article className="kpi-card">
@@ -167,13 +234,13 @@ function App() {
           <strong className="kpi-value">
             {wmape ? `${formatearDecimal(wmape, 2)}%` : "-"}
           </strong>
-          <p>Error porcentual ponderado del modelo desplegado</p>
+          <p>Error porcentual ponderado del horizonte seleccionado</p>
         </article>
 
         <article className="kpi-card">
-          <span className="kpi-label">Horizonte</span>
-          <strong className="kpi-value">6 meses</strong>
-          <p>Pronóstico estratégico de mediano plazo</p>
+          <span className="kpi-label">Horizonte activo</span>
+          <strong className="kpi-value">{horizonteActivo.label}</strong>
+          <p>Modelo actualmente usado para predicción</p>
         </article>
 
         <article className="kpi-card">
@@ -202,8 +269,8 @@ function App() {
             </div>
 
             <p className="muted">
-              Selecciona un departamento para consultar la estimación de
-              visitantes no residentes a 6 meses.
+              Selecciona un departamento y un horizonte para consultar la
+              estimación de visitantes no residentes.
             </p>
 
             <div className="form-group">
@@ -220,9 +287,28 @@ function App() {
               </select>
             </div>
 
+            <div className="form-group">
+              <label>Horizonte</label>
+              <select
+                value={horizonteSeleccionado}
+                onChange={(e) => cambiarHorizonte(e.target.value)}
+              >
+                {horizontes.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <button
               className="primary-button"
-              onClick={() => generarPrediccion()}
+              onClick={() =>
+                generarPrediccion(
+                  departamentoSeleccionado,
+                  horizonteSeleccionado
+                )
+              }
               disabled={cargando || cargandoInicial}
             >
               {cargando ? "Calculando..." : "Predecir demanda"}
@@ -246,16 +332,16 @@ function App() {
                     <strong>{prediccion.modelo}</strong>
                   </div>
                   <div>
+                    <span>Horizonte</span>
+                    <strong>{prediccion.horizonte_label}</strong>
+                  </div>
+                  <div>
                     <span>Fecha base</span>
                     <strong>{prediccion.fecha_base}</strong>
                   </div>
                   <div>
                     <span>Fecha predicha</span>
                     <strong>{prediccion.fecha_predicha}</strong>
-                  </div>
-                  <div>
-                    <span>Horizonte</span>
-                    <strong>{prediccion.horizonte}</strong>
                   </div>
                 </div>
               </>
@@ -281,7 +367,7 @@ function App() {
               <button
                 key={item.departamento}
                 className="ranking-row"
-                onClick={() => seleccionarDesdeMapa(item.departamento)}
+                onClick={() => seleccionarDepartamento(item.departamento)}
               >
                 <span className="ranking-index">{index + 1}</span>
                 <span className="ranking-name">{item.departamento}</span>
@@ -295,9 +381,9 @@ function App() {
           <div className="section-heading">
             <div>
               <p className="section-kicker">Desempeño técnico</p>
-              <h2>Métricas del modelo desplegado</h2>
+              <h2>Métricas del modelo seleccionado</h2>
             </div>
-            <span className="soft-badge">Test 2025</span>
+            <span className="soft-badge">{horizonteActivo.label}</span>
           </div>
 
           <div className="metrics-grid">
@@ -320,8 +406,8 @@ function App() {
           </div>
 
           <p className="note">
-            Se prioriza wMAPE porque la demanda turística está desbalanceada
-            entre departamentos de alta, media y baja demanda.
+            El horizonte H6 mantiene el mejor desempeño global en wMAPE dentro
+            de la comparación multihorizonte.
           </p>
         </article>
       </section>

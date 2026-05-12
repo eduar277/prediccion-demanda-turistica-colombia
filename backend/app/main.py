@@ -1,17 +1,19 @@
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.config import DEFAULT_HORIZON
 from app.services.model_service import service
 
 
 app = FastAPI(
     title="API Predicción Demanda Turística Colombia",
-    description="Backend para predicción de visitantes no residentes por departamento usando XGBoost.",
-    version="1.0.0",
+    description="Backend para predicción de visitantes no residentes por departamento usando modelos XGBoost multihorizonte.",
+    version="2.0.0",
 )
 
 
-# Permite que React pueda conectarse al backend.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,15 +25,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    """
-    Al iniciar la API se carga:
-    - modelo XGBoost
-    - columnas del modelo
-    - metadata
-    - panel histórico
-    - predicciones
-    - GeoJSON
-    """
     service.load_all()
 
 
@@ -39,7 +32,8 @@ def startup_event():
 def root():
     return {
         "mensaje": "API de predicción de demanda turística funcionando",
-        "modelo": "XGBoost horizonte 6 meses",
+        "modelo": "XGBoost multihorizonte",
+        "horizonte_default": DEFAULT_HORIZON,
     }
 
 
@@ -48,9 +42,30 @@ def health():
     return service.get_health()
 
 
+@app.get("/horizontes")
+def horizontes():
+    return service.get_horizontes()
+
+
 @app.get("/modelo/metadata")
-def modelo_metadata():
-    return service.get_metadata()
+def modelo_metadata(horizonte: str = DEFAULT_HORIZON):
+    try:
+        return service.get_metadata(horizonte)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/modelo/metadata/all")
+def modelo_metadata_all():
+    return service.get_metadata_all()
+
+
+@app.get("/modelo/metadata/{horizonte}")
+def modelo_metadata_horizonte(horizonte: str):
+    try:
+        return service.get_metadata(horizonte)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/departamentos")
@@ -69,13 +84,47 @@ def geojson():
 
 
 @app.get("/predicciones")
-def predicciones(departamento: str | None = None):
-    return service.get_predicciones(departamento=departamento)
+def predicciones(
+    horizonte: str = DEFAULT_HORIZON,
+    departamento: Optional[str] = None,
+):
+    try:
+        return service.get_predicciones(
+            horizonte=horizonte,
+            departamento=departamento,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/predicciones/mapa")
-def predicciones_mapa():
-    return service.get_predicciones_mapa()
+def predicciones_mapa(horizonte: str = DEFAULT_HORIZON):
+    try:
+        return service.get_predicciones_mapa(horizonte=horizonte)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/predicciones/mapa/{horizonte}")
+def predicciones_mapa_horizonte(horizonte: str):
+    try:
+        return service.get_predicciones_mapa(horizonte=horizonte)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/predicciones/{horizonte}")
+def predicciones_horizonte(
+    horizonte: str,
+    departamento: Optional[str] = None,
+):
+    try:
+        return service.get_predicciones(
+            horizonte=horizonte,
+            departamento=departamento,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/historico/{departamento}")
@@ -88,9 +137,25 @@ def historico_departamento(departamento: str):
     return datos
 
 
+# Endpoint anterior para compatibilidad. Usa H6 por defecto.
 @app.post("/predict/{departamento}")
-def predict_departamento(departamento: str):
+def predict_departamento_default(departamento: str):
     try:
-        return service.predict_departamento(departamento)
+        return service.predict_departamento(
+            departamento=departamento,
+            horizonte=DEFAULT_HORIZON,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# Nuevo endpoint multihorizonte.
+@app.post("/predict/{horizonte}/{departamento}")
+def predict_departamento_horizonte(horizonte: str, departamento: str):
+    try:
+        return service.predict_departamento(
+            departamento=departamento,
+            horizonte=horizonte,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
