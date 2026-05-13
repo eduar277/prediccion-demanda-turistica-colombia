@@ -41,7 +41,9 @@ def root():
 def health():
     return service.get_health()
 
-
+@app.get("/calidad-datos")
+def calidad_datos():
+    return service.get_calidad_datos()
 @app.get("/horizontes")
 def horizontes():
     return service.get_horizontes()

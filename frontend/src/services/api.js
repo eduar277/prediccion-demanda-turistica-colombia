@@ -64,3 +64,8 @@ export async function getComparacionPeriodos(fechaA, fechaB) {
 
   return response.data;
 }
+
+export async function getCalidadDatos() {
+  const response = await api.get("/calidad-datos");
+  return response.data;
+}

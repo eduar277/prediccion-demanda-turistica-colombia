@@ -489,5 +489,218 @@ class TourismPredictionService:
             )
 
         return salida
+    def _resumen_dataframe(self, nombre, df):
+        """
+        Genera un resumen estándar de calidad para un DataFrame.
+        """
+        if df is None:
+            return {
+                "nombre": nombre,
+                "cargado": False,
+                "filas": 0,
+                "columnas": 0,
+                "duplicados": 0,
+                "nulos_totales": 0,
+                "porcentaje_nulos": 0,
+                "columnas_con_nulos": [],
+                "columnas": [],
+                "rango_fechas": None,
+                "departamentos": 0,
+            }
+
+        filas, columnas = df.shape
+        duplicados = int(df.duplicated().sum())
+        nulos_totales = int(df.isna().sum().sum())
+        total_celdas = filas * columnas if filas and columnas else 0
+        porcentaje_nulos = (nulos_totales / total_celdas * 100) if total_celdas else 0
+
+        columnas_con_nulos = []
+
+        for col in df.columns:
+            nulos = int(df[col].isna().sum())
+            if nulos > 0:
+                columnas_con_nulos.append(
+                    {
+                        "columna": col,
+                        "nulos": nulos,
+                        "porcentaje": round((nulos / filas) * 100, 4) if filas else 0,
+                    }
+                )
+
+        columnas_con_nulos = sorted(
+            columnas_con_nulos,
+            key=lambda item: item["nulos"],
+            reverse=True,
+        )[:15]
+
+        rango_fechas = None
+
+        if "fecha" in df.columns:
+            fechas = pd.to_datetime(df["fecha"], errors="coerce")
+            if fechas.notna().sum() > 0:
+                rango_fechas = {
+                    "min": fechas.min().strftime("%Y-%m-%d"),
+                    "max": fechas.max().strftime("%Y-%m-%d"),
+                }
+
+        departamentos = 0
+
+        if "departamento" in df.columns:
+            departamentos = int(df["departamento"].dropna().nunique())
+
+        return {
+            "nombre": nombre,
+            "cargado": True,
+            "filas": int(filas),
+            "columnas": int(columnas),
+            "duplicados": duplicados,
+            "nulos_totales": nulos_totales,
+            "porcentaje_nulos": round(float(porcentaje_nulos), 4),
+            "columnas_con_nulos": columnas_con_nulos,
+            "columnas": df.columns.tolist(),
+            "rango_fechas": rango_fechas,
+            "departamentos": departamentos,
+        }
+
+    def _duplicados_clave_temporal(self, df):
+        """
+        Evalúa duplicados por clave lógica departamento-fecha.
+        """
+        if df is None:
+            return None
+
+        if "fecha" not in df.columns or "departamento" not in df.columns:
+            return None
+
+        duplicados = int(df.duplicated(subset=["fecha", "departamento"]).sum())
+
+        return {
+            "clave": ["fecha", "departamento"],
+            "duplicados": duplicados,
+        }
+
+    def _analizar_desbalance_territorial(self):
+        """
+        Calcula desbalance territorial usando visitantes_no_residentes
+        del panel histórico.
+        """
+        if self.panel is None:
+            return None
+
+        if "departamento" not in self.panel.columns:
+            return None
+
+        if "visitantes_no_residentes" not in self.panel.columns:
+            return None
+
+        df = self.panel.copy()
+        df["visitantes_no_residentes"] = pd.to_numeric(
+            df["visitantes_no_residentes"],
+            errors="coerce",
+        )
+
+        resumen = (
+            df.groupby("departamento", as_index=False)["visitantes_no_residentes"]
+            .sum(min_count=1)
+            .dropna()
+        )
+
+        if resumen.empty:
+            return None
+
+        total = resumen["visitantes_no_residentes"].sum()
+
+        resumen["participacion_pct"] = np.where(
+            total > 0,
+            resumen["visitantes_no_residentes"] / total * 100,
+            np.nan,
+        )
+
+        resumen = resumen.sort_values(
+            "visitantes_no_residentes",
+            ascending=False,
+        )
+
+        max_valor = float(resumen["visitantes_no_residentes"].max())
+        min_valor = float(resumen["visitantes_no_residentes"].min())
+        promedio = float(resumen["visitantes_no_residentes"].mean())
+        mediana = float(resumen["visitantes_no_residentes"].median())
+
+        razon_max_min = max_valor / min_valor if min_valor > 0 else None
+
+        return {
+            "total_visitantes": round(float(total), 4),
+            "departamentos": int(resumen["departamento"].nunique()),
+            "maximo": round(max_valor, 4),
+            "minimo": round(min_valor, 4),
+            "promedio": round(promedio, 4),
+            "mediana": round(mediana, 4),
+            "razon_max_min": round(float(razon_max_min), 4) if razon_max_min else None,
+            "top_demanda": resumen.head(5).to_dict(orient="records"),
+            "menor_demanda": resumen.tail(5).to_dict(orient="records"),
+        }
+
+    def get_calidad_datos(self):
+        """
+        Devuelve resumen de calidad de datos para el dashboard.
+        """
+        panel_resumen = self._resumen_dataframe(
+            "Panel histórico 2019-2025",
+            self.panel,
+        )
+
+        panel_resumen["duplicados_clave_temporal"] = self._duplicados_clave_temporal(
+            self.panel
+        )
+
+        datasets = []
+
+        for horizonte, df in self.datasets.items():
+            item = self._resumen_dataframe(
+                f"Dataset modelado {horizonte.upper()}",
+                df,
+            )
+            item["horizonte"] = horizonte
+            item["duplicados_clave_temporal"] = self._duplicados_clave_temporal(df)
+            datasets.append(item)
+
+        predicciones = []
+
+        for horizonte, df in self.predictions.items():
+            item = self._resumen_dataframe(
+                f"Predicciones {horizonte.upper()}",
+                df,
+            )
+            item["horizonte"] = horizonte
+            item["duplicados_clave_temporal"] = self._duplicados_clave_temporal(df)
+            predicciones.append(item)
+
+        geojson_info = {
+            "cargado": self.geojson is not None,
+            "features": 0,
+        }
+
+        if self.geojson is not None and isinstance(self.geojson, dict):
+            geojson_info["features"] = len(self.geojson.get("features", []))
+
+        return {
+            "estado": "ok",
+            "panel": panel_resumen,
+            "datasets_modelado": sorted(datasets, key=lambda x: x["horizonte"]),
+            "predicciones": sorted(predicciones, key=lambda x: x["horizonte"]),
+            "geojson": geojson_info,
+            "desbalance_territorial": self._analizar_desbalance_territorial(),
+            "criterios_calidad": [
+                "Validación de carga de archivos requeridos.",
+                "Conteo de filas y columnas.",
+                "Revisión de valores faltantes.",
+                "Revisión de duplicados generales.",
+                "Revisión de duplicados por fecha y departamento.",
+                "Validación de cobertura temporal.",
+                "Validación de cobertura territorial.",
+                "Análisis de desbalance territorial de la demanda.",
+                "Verificación de artefactos por horizonte de predicción.",
+            ],
+        }
 service = TourismPredictionService()
 

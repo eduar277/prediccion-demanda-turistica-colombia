@@ -9,6 +9,7 @@ import {
   predictDepartamento,
   getHistoricoDepartamento,
   getPeriodosDisponibles,
+  getCalidadDatos,
 } from "./services/api";
 import TourismMap from "./components/TourismMap";
 import "./App.css";
@@ -16,6 +17,7 @@ import DepartmentChart from "./components/DepartmentChart";
 import HorizonComparison from "./components/HorizonComparison";
 import PeriodComparison from "./components/PeriodComparison";
 import ExportTools from "./components/ExportTools";
+import DataQuality from "./components/DataQuality";
 function App() {
   const [health, setHealth] = useState(null);
   const [metadata, setMetadata] = useState(null);
@@ -30,7 +32,7 @@ function App() {
   const [prediccion, setPrediccion] = useState(null);
   const [geojson, setGeojson] = useState(null);
   const [prediccionesMapa, setPrediccionesMapa] = useState([]);
-
+  const [calidadDatos, setCalidadDatos] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [cargandoInicial, setCargandoInicial] = useState(true);
   const [error, setError] = useState("");
@@ -51,12 +53,14 @@ function App() {
   departamentosData,
   geojsonData,
   periodosData,
+  calidadData,
 ] = await Promise.all([
   getHealth(),
   getHorizontes(),
   getDepartamentos(),
   getGeojson(),
   getPeriodosDisponibles(),
+  getCalidadDatos(),
 ]);
 
       setHealth(healthData);
@@ -64,6 +68,7 @@ function App() {
       setDepartamentos(departamentosData);
       setGeojson(geojsonData);
       setPeriodosDisponibles(periodosData);
+      setCalidadDatos(calidadData);
       const departamentoInicial = departamentosData.includes("ANTIOQUIA")
         ? "ANTIOQUIA"
         : departamentosData[0];
@@ -394,6 +399,11 @@ async function cargarHistoricoDepartamento(departamento) {
       <section className="period-comparison-section">
   <PeriodComparison periodos={periodosDisponibles} />
 </section>
+
+      <section className="data-quality-section">
+  <DataQuality calidadDatos={calidadDatos} />
+</section>
+
       <section className="export-section">
   <ExportTools
     prediccionesMapa={prediccionesMapa}
